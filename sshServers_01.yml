@@ -1,0 +1,4 @@
+- hosts: all:!certificateAuthority:!webservers
+  become: true
+  roles:
+    - sshServer_01

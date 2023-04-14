@@ -1,0 +1,5 @@
+users:
+   root: "zone-webservers"
+   root: "zone-dbservers"
+
+ansible_temp_directory: /tmp/ansible_ssh

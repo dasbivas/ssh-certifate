@@ -1,0 +1,6 @@
+- name: add Sever public key
+  copy: src={{ ansible_temp_directory }}/ssh_host_rsa_key.pub dest=/etc/ssh/CA/ssh_host_rsa_key.pub owner=root group=root
+- name: sign Certificate agaist the public key
+  shell: echo 'y' | ssh-keygen -s /etc/ssh/CA/host-ca -I host_server -h -V -5m:+52w /etc/ssh/CA/ssh_host_rsa_key.pub
+- name:  add Sever certificate
+  fetch: src=/etc/ssh/CA/ssh_host_rsa_key-cert.pub dest={{ ansible_temp_directory }}/ssh_host_rsa_key-cert.pub flat=yes
