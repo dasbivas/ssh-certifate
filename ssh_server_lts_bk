@@ -1,0 +1,54 @@
+---
+
+- name: # get hostname version
+  shell: uname -n
+  register: uname_result
+
+- name: # save to variable
+  set_fact:
+    uname_a: '{{ uname_result.stdout }}'
+
+- name: # checking CA directory  exists or not?
+  stat:
+    path: /etc/ssh/CA
+  register: status
+
+- name: # delete CA Directory
+  shell: rm -rf /etc/ssh/CA/
+  when: status.stat.exists == true
+
+- name: # hostCertificate->comment
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: '^(HostCertificate /etc/ssh/CA/ssh_host_rsa_key-cert.pub)'
+    replace: '#\1'
+
+- name: # trustedUserCAKeys->comment
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: '^(TrustedUserCAKeys /etc/ssh/CA/client-ca.pub)'
+    replace: '#\1'
+
+- name: # create CA certificate directory
+  file: path=/etc/ssh/CA state=directory owner=root group=root mode=0700
+
+- name: # create CA certificate
+  shell: echo 'y' | ssh-keygen -N '' -t rsa -b 4096 -h -f /etc/ssh/CA/ssh_$(uname -n)_rsa_key
+
+- name: # add Sever public key
+  copy: src={{ ansible_temp_directory }}/host-ca dest=/etc/ssh/CA/ owner=root group=root
+
+- name: # changing the permissions
+  file:
+    path: /etc/ssh/CA/host-ca
+    owner: root
+    group: root
+    mode: 0700
+
+- name: # sign Certificate agaist the public key
+  shell: echo 'y' | ssh-keygen -s /etc/ssh/CA/host-ca -I host_server -h -V -5m:+52w /etc/ssh/CA/ssh_{{ uname_a }}_rsa_key.pub
+
+- name: # delete host-ca
+  file:
+    state: absent
+    path: /etc/ssh/CA/host-ca
