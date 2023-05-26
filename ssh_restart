@@ -1,0 +1,5 @@
+---
+- name: # Restart sssd Server
+  shell: |
+    systemctl restart sssd
+    service sssd restart
