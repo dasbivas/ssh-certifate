@@ -1,0 +1,15 @@
+- name: trust sever private key
+  lineinfile: dest=/etc/ssh/sshd_config line="HostKey /etc/ssh/CA/ssh_{{ uname_a }}_rsa_key"
+  notify: restart sshd
+
+- name: trust CA in sshd configuration
+  lineinfile: dest=/etc/ssh/sshd_config line="HostCertificate /etc/ssh/CA/ssh_{{ uname_a }}_rsa_key-cert.pub"
+  notify: restart sshd
+
+- name: add CA Client public key
+  copy: src={{ ansible_temp_directory }}/client-ca.pub dest=/etc/ssh/CA/client-ca.pub owner=root group=root
+  notify: restart sshd
+
+- name: trust CA in sshd configuration
+  lineinfile: dest=/etc/ssh/sshd_config line="TrustedUserCAKeys /etc/ssh/CA/client-ca.pub"
+  notify: restart sshd
